@@ -11,8 +11,8 @@ Tools used:
 
 ## Table of contents
 
-1. Introduction to Java Performance
-    - Interview Problem 1 (Merrill Lynch) - What is the difference between latency, bandwidth and throughput?
+1. [Introduction to Java Performance](https://github.com/backstreetbrogrammer/39_JavaPerformance#chapter-01-introduction-to-java-performance)
+    - [Interview Problem 1 (Merrill Lynch) - What is the difference between latency, bandwidth and throughput?](https://github.com/backstreetbrogrammer/39_JavaPerformance#interview-problem-1-merrill-lynch---what-is-the-difference-between-latency-bandwidth-and-throughput)
 2. Just In Time Compilation
 3. Java Memory Model
     - Escaping References
@@ -30,15 +30,14 @@ Tools used:
 
 `Java` was historically considered slower than the fastest 3rd generation typed languages such as `C` and `C++`.
 
-The main reason being a different language design, where after compiling, Java programs run on a **Java virtual
-machine (JVM)** rather than directly on the computer's processor as native
-code, as do C and C++ programs.
+The main reason being a different language design, where after compiling, Java programs run on a `Java virtual
+machine (JVM)` rather than directly on the computer's processor as `native code`, as do C and C++ programs.
 
 Performance was a matter of concern because much business software has been written in Java after the language quickly
 became popular in the late 1990s and early 2000s.
 
-Since the late 1990s, the execution speed of Java programs improved significantly via introduction of **just-in-time
-compilation (JIT)** (in 1997 for Java 1.1), the addition of language features supporting better code analysis,
+Since the late 1990s, the execution speed of Java programs improved significantly via introduction of `just-in-time
+compilation (JIT)` (in 1997 for Java 1.1), the addition of language features supporting better code analysis,
 and optimizations in the JVM (such as `HotSpot` becoming the default for Sun's JVM in 2000).
 
 Hardware execution of Java `bytecode`, was also explored to offer significant performance improvements.
