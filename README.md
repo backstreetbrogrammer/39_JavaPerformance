@@ -15,7 +15,8 @@ Tools used:
     - [Virtual machine optimization methods](https://github.com/backstreetbrogrammer/39_JavaPerformance#virtual-machine-optimization-methods)
     - [Interview Problem 1 (Merrill Lynch) - What is the difference between latency, bandwidth and throughput?](https://github.com/backstreetbrogrammer/39_JavaPerformance#interview-problem-1-merrill-lynch---what-is-the-difference-between-latency-bandwidth-and-throughput)
 2. [Just In Time Compilation](https://github.com/backstreetbrogrammer/39_JavaPerformance#chapter-02-just-in-time-compilation)
-    - [Interview Problem 2 (Barclays) - What is JVM warmup and how does it improve JVM performance?](https://github.com/backstreetbrogrammer/39_JavaPerformance#interview-problem-1-merrill-lynch---what-is-the-difference-between-latency-bandwidth-and-throughput)
+    - [Interview Problem 2 (Barclays) - What is JVM warmup and how does it improve JVM performance?](https://github.com/backstreetbrogrammer/39_JavaPerformance#interview-problem-2-barclays---what-is-jvm-warmup-and-how-does-it-improve-jvm-performance)
+    - [Print Code Compilation](https://github.com/backstreetbrogrammer/39_JavaPerformance#print-code-compilation)
 3. Java Memory Model
     - Escaping References
     - JVM memory tuning
@@ -318,11 +319,11 @@ Now, we can use this class in our main method:
 ```java
 public class Main {
 
-   public static void main(final String[] args) {
-      final PrimeNumbers primeNumbers = new PrimeNumbers();
-      final Integer max = Integer.parseInt(args[0]);
-      primeNumbers.generateNumbers(max);
-   }
+    public static void main(final String[] args) {
+        final PrimeNumbers primeNumbers = new PrimeNumbers();
+        final Integer max = Integer.parseInt(args[0]);
+        primeNumbers.generateNumbers(max);
+    }
 }
 ```
 
