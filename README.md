@@ -15,6 +15,7 @@ Tools used:
     - [Virtual machine optimization methods](https://github.com/backstreetbrogrammer/39_JavaPerformance#virtual-machine-optimization-methods)
     - [Interview Problem 1 (Merrill Lynch) - What is the difference between latency, bandwidth and throughput?](https://github.com/backstreetbrogrammer/39_JavaPerformance#interview-problem-1-merrill-lynch---what-is-the-difference-between-latency-bandwidth-and-throughput)
 2. [Just In Time Compilation](https://github.com/backstreetbrogrammer/39_JavaPerformance#chapter-02-just-in-time-compilation)
+    - [Interview Problem 2 (Barclays) - What is JVM warmup and how does it improve JVM performance?](https://github.com/backstreetbrogrammer/39_JavaPerformance#interview-problem-1-merrill-lynch---what-is-the-difference-between-latency-bandwidth-and-throughput)
 3. Java Memory Model
     - Escaping References
     - JVM memory tuning
@@ -211,4 +212,117 @@ The corresponding improvement in start-up time is more obvious for small program
 ---
 
 ## Chapter 02. Just In Time Compilation
+
+**Bytecode**
+
+Java bytecode is the bytecode-structured instruction set of the Java virtual machine (JVM), a virtual machine that
+enables a computer to run programs written in the Java programming language and several other programming languages
+like Scala, Groovy, Kotlin and Java.
+
+Java bytecode can be **interpreted** and compiled to native OS machine code by JVM to run the program.
+
+This feature let programmers `Write once, Run anywhere (WORA)`, meaning that compiled Java code can run on all platforms
+that support Java without the need to recompile.
+
+Java applications are typically compiled to bytecode that can run on any Java virtual machine (JVM) regardless of the
+underlying computer architecture.
+
+The syntax of Java is similar to C and C++, but has fewer low-level facilities than either of them. The
+Java runtime provides dynamic capabilities (such as reflection and runtime code modification) that are typically not
+available in traditional compiled languages.
+
+![Bytecode](Bytecode.PNG)
+
+**Just-in-time compilation**
+
+Just-in-time (JIT) compilation (also dynamic translation or run-time compilation) is compilation of computer code during
+execution of a program at run time rather than before execution.
+
+This may consist of source code translation but is more commonly bytecode translation to machine code, which is then
+executed directly.
+
+A system implementing a JIT compiler typically **continuously analyses** the code being executed and identifies parts of
+the code where the speedup gained from compilation or recompilation would outweigh the overhead of compiling that code.
+
+### Interview Problem 2 (Barclays) - What is JVM warmup and how does it improve JVM performance?
+
+JVM warmup refers to having a piece of code run enough times that the JVM stops interpreting and compiles to native.
+
+The reason is that the JVM gathers statistics about the code in question that it uses during code generation.
+
+As JIT compiler will keep on analysing the code and compile the most used methods or blocks into native code - if it
+gets enough time to do the analysis - it can improve performance.
+
+In JVM, there are multiple threads:
+
+- one thread is doing bytecode interpretation
+- another thread is doing JIT compilation
+
+Thus, if more time is given for code run - all the native compilation would have been completed and the code will
+execute faster
+
+If a code chunk in question is "warmed" with fake data which has different properties than the real data could
+well be very good performant.
+
+For a low latency application, we should warmup the **critical path** in our system.
+
+We should have unit tests consisting of fake data that could be run on start up to warmup up the code and compile
+the hot spots of the code to native code.
+
+### Print Code Compilation
+
+Suppose we want to see which part of code is compiled natively.
+
+We have `PrimeNumbers` class:
+
+```java
+import java.util.ArrayList;
+import java.util.List;
+
+public class PrimeNumbers {
+
+    private List<Integer> primes;
+
+    private Boolean isPrime(final Integer testNumber) {
+        for (int i = 2; i < testNumber; i++) {
+            if (testNumber % i == 0) return false;
+        }
+        return true;
+    }
+
+    private Integer getNextPrimeAbove(final Integer previous) {
+        Integer testNumber = previous + 1;
+        while (!isPrime(testNumber)) {
+            testNumber++;
+        }
+        return testNumber;
+    }
+
+    public void generateNumbers(final Integer max) {
+        primes = new ArrayList<>();
+        primes.add(2);
+
+        Integer next = 2;
+        while (primes.size() <= max) {
+            next = getNextPrimeAbove(next);
+            primes.add(next);
+        }
+        System.out.println(primes);
+    }
+
+}
+```
+
+Now, we can use this class in our main method:
+
+```java
+public class Main {
+
+   public static void main(final String[] args) {
+      final PrimeNumbers primeNumbers = new PrimeNumbers();
+      final Integer max = Integer.parseInt(args[0]);
+      primeNumbers.generateNumbers(max);
+   }
+}
+```
 
