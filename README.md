@@ -16,8 +16,8 @@ Tools used:
     - [Interview Problem 1 (Merrill Lynch) - What is the difference between latency, bandwidth and throughput?](https://github.com/backstreetbrogrammer/39_JavaPerformance#interview-problem-1-merrill-lynch---what-is-the-difference-between-latency-bandwidth-and-throughput)
 2. [Just In Time Compilation](https://github.com/backstreetbrogrammer/39_JavaPerformance#chapter-02-just-in-time-compilation)
     - [Interview Problem 2 (Barclays) - What is JVM warmup and how does it improve JVM performance?](https://github.com/backstreetbrogrammer/39_JavaPerformance#interview-problem-2-barclays---what-is-jvm-warmup-and-how-does-it-improve-jvm-performance)
-    - [Interview Problem 3 (Point72 Hedge Fund) - Print Code Compilation](https://github.com/backstreetbrogrammer/39_JavaPerformance#print-code-compilation)
-    - [Compilers C1 and C2](https://github.com/backstreetbrogrammer/39_JavaPerformance#print-code-compilation)
+    - [Interview Problem 3 (Point72 Hedge Fund) - Print Code Compilation](https://github.com/backstreetbrogrammer/39_JavaPerformance#interview-problem-3-point72-hedge-fund---print-code-compilation)
+    - [Compilers C1 and C2](https://github.com/backstreetbrogrammer/39_JavaPerformance#compilers-c1-and-c2)
 3. Java Memory Model
     - Escaping References
     - JVM memory tuning
