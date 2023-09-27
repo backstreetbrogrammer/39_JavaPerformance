@@ -16,7 +16,8 @@ Tools used:
     - [Interview Problem 1 (Merrill Lynch) - What is the difference between latency, bandwidth and throughput?](https://github.com/backstreetbrogrammer/39_JavaPerformance#interview-problem-1-merrill-lynch---what-is-the-difference-between-latency-bandwidth-and-throughput)
 2. [Just In Time Compilation](https://github.com/backstreetbrogrammer/39_JavaPerformance#chapter-02-just-in-time-compilation)
     - [Interview Problem 2 (Barclays) - What is JVM warmup and how does it improve JVM performance?](https://github.com/backstreetbrogrammer/39_JavaPerformance#interview-problem-2-barclays---what-is-jvm-warmup-and-how-does-it-improve-jvm-performance)
-    - [Print Code Compilation](https://github.com/backstreetbrogrammer/39_JavaPerformance#print-code-compilation)
+    - [Interview Problem 3 (Point72 Hedge Fund) - Print Code Compilation](https://github.com/backstreetbrogrammer/39_JavaPerformance#print-code-compilation)
+    - [Compilers C1 and C2](https://github.com/backstreetbrogrammer/39_JavaPerformance#print-code-compilation)
 3. Java Memory Model
     - Escaping References
     - JVM memory tuning
@@ -270,17 +271,17 @@ For a low latency application, we should warmup the **critical path** in our sys
 We should have unit tests consisting of fake data that could be run on start up to warmup up the code and compile
 the hot spots of the code to native code.
 
-### Print Code Compilation
+### Interview Problem 3 (Point72 Hedge Fund) - Print Code Compilation
 
-Suppose we want to see which part of code is compiled natively.
+We want to see which part of code is compiled natively.
 
-We have `PrimeNumbers` class:
+For example, we have `PrimeNumbersGenerator` class:
 
 ```java
 import java.util.ArrayList;
 import java.util.List;
 
-public class PrimeNumbers {
+public class PrimeNumbersGenerator {
 
     private List<Integer> primes;
 
@@ -311,19 +312,90 @@ public class PrimeNumbers {
         System.out.println(primes);
     }
 
-}
-```
-
-Now, we can use this class in our main method:
-
-```java
-public class Main {
-
     public static void main(final String[] args) {
-        final PrimeNumbers primeNumbers = new PrimeNumbers();
+        final PrimeNumbersGenerator primeNumbers = new PrimeNumbersGenerator();
         final Integer max = Integer.parseInt(args[0]);
         primeNumbers.generateNumbers(max);
     }
+
 }
 ```
 
+We can print say first 10 prime numbers: `java PrimeNumbersGenerator 10`
+
+Output:
+
+```
+[2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31]
+```
+
+Let's print the compilation using the flag **-XX:+PrintCompilation
+**: `java -XX:+PrintCompilation PrimeNumbersGenerator 10`
+
+Sample output:
+
+```
+    ...
+    ...
+    249  206       3       java.lang.Math::max (11 bytes)
+    250  205       3       java.util.zip.ZipFile$Source::isMetaName (141 bytes)
+    250  207       3       sun.nio.fs.WindowsPathParser::isInvalidPathChar (22 bytes)
+    252  208 %     4       java.util.zip.ZipFile$Source::hashN @ 2 (26 bytes)
+    259  209 % !   4       java.util.zip.ZipFile$Source::checkUTF8 @ 4 (43 bytes)
+    260  211       3       java.lang.System::getSecurityManager (4 bytes)
+    263  213       3       java.util.Arrays::copyOf (19 bytes)
+    265  212       4       java.util.zip.ZipFile$Source::hashN (26 bytes)
+    267  193       3       java.util.zip.ZipFile$Source::hashN (26 bytes)   made not entrant
+    267  210       4       java.util.zip.ZipFile$Source::addEntry (33 bytes)
+    269  204       3       java.util.zip.ZipFile$Source::addEntry (33 bytes)   made not entrant
+    269  215   !   4       java.util.zip.ZipFile$Source::checkUTF8 (43 bytes)
+    273  216       3       java.lang.StringBuilder::append (8 bytes)
+    274  217       3       java.lang.AbstractStringBuilder::append (45 bytes)
+    274  194   !   3       java.util.zip.ZipFile$Source::checkUTF8 (43 bytes)   made not entrant
+    275  214       4       java.lang.StringLatin1::indexOf (61 bytes)
+    276  218       3       java.lang.String::getBytes (44 bytes)
+    281   55       3       java.lang.StringLatin1::indexOf (61 bytes)   made not entrant
+    282  219       3       java.lang.StringLatin1::lastIndexOf (40 bytes)
+    283  220       3       java.lang.AbstractStringBuilder::isLatin1 (19 bytes)
+    290  221       3       java.lang.AbstractStringBuilder::newCapacity (55 bytes)
+    292   73       4       java.lang.String::charAt (25 bytes)   made not entrant
+    292  222       3       java.lang.String::startsWith (138 bytes)
+    294  223       3       java.lang.String::charAt (25 bytes)
+    296  224       3       java.lang.Class::getName (18 bytes)
+    296  225       1       java.lang.Integer::intValue (5 bytes)
+[2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31]
+    297  226       3       java.lang.invoke.MethodType::hashCode (53 bytes)
+    297  227       4       java.util.Objects::requireNonNull (14 bytes)
+    297  228     n 0       java.lang.Object::clone (native)   
+    297   13       3       java.util.Objects::requireNonNull (14 bytes)   made not entrant
+
+```
+
+Let's explain each column shown in the above output:
+
+- **First column** is the **timer** in `ms`, that it took to run and it's cumulative. Last row is the **total time**.
+- **Second column** is the **order** that the line item was run.
+- **Third column** is:
+    - blank
+    - `n` = native
+    - `s` = synchronized
+    - `!` = some exception handling was going on
+    - `%` = code has been natively compiled and is running in memory under the **code cache**
+- **Fourth column** has a value from `0` to `4`. This corresponds as an **ENUM** to what type of compilation has taken
+  place:
+    - `0`: no compilation took place (code was interpreted)
+    - `1 through 4`: is a range of compilation complexity (4 being greatest)
+- **Fifth and final column** is the line item that was run.
+
+### Compilers C1 and C2
+
+There are two compilers in Java:
+
+- C1 handles native compilation levels 1-3
+- C2 handles native level 4 only (which stores native compiles into the code cache).
+
+The JVM determines the compilation level based on how often it is being run and how complex or how time-consuming it
+is – through profiling.
+
+As there is a tradeoff in optimizing more complex code (higher native tier/levels), it only will do this with methods
+that are called more often, or have greater complexity.
