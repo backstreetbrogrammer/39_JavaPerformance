@@ -31,7 +31,7 @@ public class PrimeNumbersGenerator {
             next = getNextPrimeAbove(next);
             primes.add(next);
         }
-        System.out.println(primes);
+        // System.out.println(primes);
     }
 
     public static void main(final String[] args) {

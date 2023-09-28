@@ -329,45 +329,47 @@ Output:
 [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31]
 ```
 
-Let's print the compilation using the flag **-XX:+PrintCompilation
-**: `java -XX:+PrintCompilation PrimeNumbersGenerator 10`
+Let's print the compilation using the flag **-XX:+PrintCompilation**:
+
+`java -XX:+PrintCompilation PrimeNumbersGenerator 5000`
 
 Sample output:
 
 ```
     ...
     ...
-    249  206       3       java.lang.Math::max (11 bytes)
-    250  205       3       java.util.zip.ZipFile$Source::isMetaName (141 bytes)
-    250  207       3       sun.nio.fs.WindowsPathParser::isInvalidPathChar (22 bytes)
-    252  208 %     4       java.util.zip.ZipFile$Source::hashN @ 2 (26 bytes)
-    259  209 % !   4       java.util.zip.ZipFile$Source::checkUTF8 @ 4 (43 bytes)
-    260  211       3       java.lang.System::getSecurityManager (4 bytes)
-    263  213       3       java.util.Arrays::copyOf (19 bytes)
-    265  212       4       java.util.zip.ZipFile$Source::hashN (26 bytes)
-    267  193       3       java.util.zip.ZipFile$Source::hashN (26 bytes)   made not entrant
-    267  210       4       java.util.zip.ZipFile$Source::addEntry (33 bytes)
-    269  204       3       java.util.zip.ZipFile$Source::addEntry (33 bytes)   made not entrant
-    269  215   !   4       java.util.zip.ZipFile$Source::checkUTF8 (43 bytes)
-    273  216       3       java.lang.StringBuilder::append (8 bytes)
-    274  217       3       java.lang.AbstractStringBuilder::append (45 bytes)
-    274  194   !   3       java.util.zip.ZipFile$Source::checkUTF8 (43 bytes)   made not entrant
-    275  214       4       java.lang.StringLatin1::indexOf (61 bytes)
-    276  218       3       java.lang.String::getBytes (44 bytes)
-    281   55       3       java.lang.StringLatin1::indexOf (61 bytes)   made not entrant
-    282  219       3       java.lang.StringLatin1::lastIndexOf (40 bytes)
-    283  220       3       java.lang.AbstractStringBuilder::isLatin1 (19 bytes)
-    290  221       3       java.lang.AbstractStringBuilder::newCapacity (55 bytes)
-    292   73       4       java.lang.String::charAt (25 bytes)   made not entrant
-    292  222       3       java.lang.String::startsWith (138 bytes)
-    294  223       3       java.lang.String::charAt (25 bytes)
-    296  224       3       java.lang.Class::getName (18 bytes)
-    296  225       1       java.lang.Integer::intValue (5 bytes)
-[2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31]
-    297  226       3       java.lang.invoke.MethodType::hashCode (53 bytes)
-    297  227       4       java.util.Objects::requireNonNull (14 bytes)
-    297  228     n 0       java.lang.Object::clone (native)   
-    297   13       3       java.util.Objects::requireNonNull (14 bytes)   made not entrant
+    494  218 % !   4       java.util.zip.ZipFile$Source::checkUTF8 @ 4 (43 bytes)
+    499  221       4       java.util.zip.ZipFile$Source::hashN (26 bytes)
+    501  202       3       java.util.zip.ZipFile$Source::hashN (26 bytes)   made not entrant
+    501  219       4       java.util.zip.ZipFile$Source::addEntry (33 bytes)
+    502  222       3       java.lang.String::getBytes (44 bytes)
+    503  213       3       java.util.zip.ZipFile$Source::addEntry (33 bytes)   made not entrant
+    506  223       3       java.lang.AbstractStringBuilder::<init> (39 bytes)
+    507  224       3       java.lang.StringBuilder::toString (35 bytes)
+    508  225       3       java.lang.StringLatin1::lastIndexOf (40 bytes)
+    509  226       3       java.lang.String::checkBoundsBeginEnd (60 bytes)
+    511  227       3       java.lang.AbstractStringBuilder::newCapacity (55 bytes)
+    551  228       3       java.lang.invoke.MethodType::hashCode (53 bytes)
+    552  229     n 0       java.lang.Object::clone (native)   
+    553  230       3       java.lang.Class::getName (18 bytes)
+    556  231       4       java.lang.String::isLatin1 (19 bytes)
+    557    2       3       java.lang.String::isLatin1 (19 bytes)   made not entrant
+    577   77       4       java.lang.String::charAt (25 bytes)   made not entrant
+    580  232       3       java.lang.String::charAt (25 bytes)
+    581  233       3       java.lang.String::startsWith (138 bytes)
+    582  234       3       java.lang.StringLatin1::replace (196 bytes)
+    586  235       1       java.lang.Integer::intValue (5 bytes)
+    587  236       1       java.lang.Boolean::booleanValue (5 bytes)
+    587  237       3       com.backstreetbrogrammer.ch02_jit.PrimeNumbersGenerator::isPrime (35 bytes)
+    587  238       3       java.lang.Integer::valueOf (32 bytes)
+    588  239       1       java.util.ArrayList::size (5 bytes)
+    589  240 %     4       com.backstreetbrogrammer.ch02_jit.PrimeNumbersGenerator::isPrime @ 2 (35 bytes)
+    593  241       4       com.backstreetbrogrammer.ch02_jit.PrimeNumbersGenerator::isPrime (35 bytes)
+    594  242       3       java.util.ArrayList::add (25 bytes)
+    599  237       3       com.backstreetbrogrammer.ch02_jit.PrimeNumbersGenerator::isPrime (35 bytes)   made not entrant
+    599  243       3       com.backstreetbrogrammer.ch02_jit.PrimeNumbersGenerator::getNextPrimeAbove (43 bytes)
+    691  244       4       com.backstreetbrogrammer.ch02_jit.PrimeNumbersGenerator::getNextPrimeAbove (43 bytes)
+    704  243       3       com.backstreetbrogrammer.ch02_jit.PrimeNumbersGenerator::getNextPrimeAbove (43 bytes)   made not entrant
 
 ```
 
@@ -391,11 +393,151 @@ Let's explain each column shown in the above output:
 
 There are two compilers in Java:
 
-- C1 handles native compilation levels 1-3
-- C2 handles native level 4 only (which stores native compiles into the code cache).
+- `C1` handles native compilation levels `1-3`
+- `C2` handles native level `4` only (which stores native compiles into the code cache).
 
 The JVM determines the compilation level based on how often it is being run and how complex or how time-consuming it
-is – through profiling.
+is – through **profiling**.
 
 As there is a tradeoff in optimizing more complex code (higher native tier/levels), it only will do this with methods
 that are called more often, or have greater complexity.
+
+**Code Cache**
+
+Native compiled code - level 4 by C2 compiler -> its placed in the code cache.
+
+However, the code cache size is limited. In a large application - where many methods can be compiled -> default code
+cache size may be insufficient.
+
+It may create a warning in logs:
+
+```
+VM warning: CodeCache is full. Compiler has been disabled.
+```
+
+We can print the code cache size which contains the compiled code:
+
+`java -XX:+PrintCodeCache PrimeNumbersGenerator 5000`
+
+Sample output:
+
+```
+CodeHeap 'non-profiled nmethods': size=120064Kb used=72Kb max_used=72Kb free=119991Kb
+ bounds [0x000001374ed20000, 0x000001374ef90000, 0x0000013756260000]
+CodeHeap 'profiled nmethods': size=120000Kb used=269Kb max_used=269Kb free=119730Kb
+ bounds [0x00000137477f0000, 0x0000013747a60000, 0x000001374ed20000]
+CodeHeap 'non-nmethods': size=5696Kb used=1058Kb max_used=1072Kb free=4637Kb
+ bounds [0x0000013747260000, 0x00000137474d0000, 0x00000137477f0000]
+ total_blobs=577 nmethods=235 adapters=254
+ compilation: enabled
+              stopped_count=0, restarted_count=0
+ full_count=0
+```
+
+So, total code cache size = `(120064 + 120000 + 5696) KB` = `245760 KB` ~= `245 MB`
+
+Used code cache size = `(72 + 269 + 1058) KB` = `1399 KB` ~= `1 MB`
+
+There are 3 VM arguments through which we can tune JVM code cache size:
+
+- `InitialCodeCacheSize` = code cache size when the app is started - normally around 160KB
+- `ReservedCodeCacheSize` = max code cache size possible
+- `CodeCacheExpansionSize` = how quickly the code cache should grow when initially full
+
+For example, lets change the reserved code cache size to 28MB: `-XX:ReservedCodeCacheSize=28m`
+
+`java -XX:ReservedCodeCacheSize=28m -XX:+PrintCodeCache PrimeNumbersGenerator 5000`
+
+Sample output:
+
+```
+CodeCache: size=28672Kb used=1402Kb max_used=1416Kb free=27269Kb
+ bounds [0x000001f7afcf0000, 0x000001f7aff60000, 0x000001f7b18f0000]
+ total_blobs=577 nmethods=235 adapters=254
+ compilation: enabled
+              stopped_count=0, restarted_count=0
+ full_count=0
+```
+
+**Total** code cache size is reduced to `28672 KB` ~= `28 MB` and **used** code cache size is almost same as before:
+`1402 KB` or `1 MB`.
+
+**Turning off tiered compilation**
+
+If only want to interpret the code and not compile, then use VM flag: `-XX:-TieredCompilation`
+
+There should NOT be any reason or use case for this and application will run very slow!
+
+`java -XX:-TieredCompilation -XX:+PrintCompilation PrimeNumbersGenerator 5000`
+
+Sample output:
+
+```
+    ...
+    ...
+    275   29             java.util.zip.ZipFile$Source::hashN (26 bytes)
+    276   30   !         java.util.zip.ZipFile$Source::checkUTF8 (43 bytes)
+    282   31             java.lang.String::charAt (25 bytes)
+    283   32             java.lang.StringLatin1::charAt (28 bytes)
+    296   33             java.util.zip.ZipUtils::SH (21 bytes)
+    322   31             java.lang.String::charAt (25 bytes)   made not entrant
+    325   34             java.lang.Integer::intValue (5 bytes)
+    326   35             com.backstreetbrogrammer.ch02_jit.PrimeNumbersGenerator::isPrime (35 bytes)
+    374   36             java.lang.Number::<init> (5 bytes)
+    374   37             java.lang.Integer::<init> (10 bytes)
+    375   38             java.lang.Integer::valueOf (32 bytes)
+    376   39             java.lang.Boolean::booleanValue (5 bytes)
+    377   40             com.backstreetbrogrammer.ch02_jit.PrimeNumbersGenerator::getNextPrimeAbove (43 bytes)
+```
+
+As seen above, there is no level 1-4 printed as it's all **interpreted** code now.
+
+**Tuning native compilation within the JVM**
+
+There are 2 VM flags which can be used:
+
+- `-XX:CICompilerCount=n`
+- `-XX:CompileThreshold=n`
+
+Code is only compiled when it is called `n` number of times during the application run.
+
+2 factors which affect native compilation within the JVM:
+
+- no of threads involved in compilation
+- threshold required for a method to run before its natively compiled and put in code cache level 4 by C2
+
+To find no of threads used for compilation, run this command: `java -XX:+PrintFlagsFinal`
+
+Check for `CICompilerCount` and in the output.
+
+```
+intx CICompilerCount  = 3 
+...
+...
+intx CompileThreshold = 10000
+```
+
+So, `3` threads available for compilation and a code block or method should have been called at-least `10,000` times
+to make it a candidate for compilation and put in code cache.
+
+Another easier way to get above counts in a running java process is:
+
+`jinfo -flag CICompilerCount <pid>`
+
+`jinfo -flag CompileThreshold <pid>`
+
+If we increase number of threads and compile - it does NOT make any difference if the code is small:
+
+`java -XX:CICompilerCount=6 -XX:+PrintCompilation PrimeNumbersGenerator 5000`
+
+By default, at-least 2 threads should be used for JVM - for compilers `C1` and `C2`.
+
+Similarly, reducing the threshold even had worse performance in the example code!
+
+`java -XX:CICompilerCount=6 -XX:CompileThreshold=1000 -XX:+PrintCompilation PrimeNumbersGenerator 5000`
+
+---
+
+## Chapter 03. Java Memory Model
+
+
