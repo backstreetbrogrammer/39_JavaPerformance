@@ -18,8 +18,9 @@ Tools used:
     - [Interview Problem 2 (Barclays) - What is JVM warmup and how does it improve JVM performance?](https://github.com/backstreetbrogrammer/39_JavaPerformance#interview-problem-2-barclays---what-is-jvm-warmup-and-how-does-it-improve-jvm-performance)
     - [Interview Problem 3 (Point72 Hedge Fund) - Print Code Compilation](https://github.com/backstreetbrogrammer/39_JavaPerformance#interview-problem-3-point72-hedge-fund---print-code-compilation)
     - [Compilers C1 and C2](https://github.com/backstreetbrogrammer/39_JavaPerformance#compilers-c1-and-c2)
-3. Java Memory Model
-    - Escaping References
+3. [Java Memory Model](https://github.com/backstreetbrogrammer/39_JavaPerformance#chapter-02-just-in-time-compilation)
+    - [Interview Problem 4 (Merrill Lunch): Predict the output of the program with explanation](https://github.com/backstreetbrogrammer/39_JavaPerformance#chapter-02-just-in-time-compilation)
+    - [Escaping References](https://github.com/backstreetbrogrammer/39_JavaPerformance#chapter-02-just-in-time-compilation)
     - JVM memory tuning
 4. Garbage Collection
     - Monitoring and Tuning Heap
@@ -572,12 +573,113 @@ To summarize,
 - A **local** variable may also be a **reference to an object**. In that case the **reference** (the local variable) is
   stored on the **thread stack**, but the **object** itself if stored on the **heap**.
 - An **object** may contain **methods** and these methods may contain **local variables**. These local variables are
-  also stored on the **thread stack**, even if the object the method belongs to is stored on the heap.
+  also stored on the **thread stack**, even if the object the method belongs to is stored on the **heap**.
 - An object's **member variables** are stored on the **heap** along with the object itself. That is true both when the
   member variable is of a primitive type, and if it is a reference to an object.
 - **Static** class variables are also stored on the **heap** along with the class definition.
 - **Objects** on the heap can be accessed by all threads that have a reference to the object. When a thread has access
-  to an object, it can also get access to that object's member variables. If two threads call a method on the same
+  to an object, it can also get access to that object's **member variables**. If two threads call a method on the same
   object at the same time, they will both have access to the object's member variables, but each thread will have its
-  own copy of the local variables.
+  **own copy** of the local variables.
+
+Let's look at the following example class:
+
+```java
+import java.util.ArrayList;
+import java.util.List;
+
+public class StackAndHeap {
+
+    public static void main(final String[] args) {
+        final List<String> list = new ArrayList<>();
+        list.add("One");
+        list.add("Two");
+        list.add("Three");
+
+        print(list);
+
+        System.out.printf("main list: %s%n", list);
+    }
+
+    private static void print(final List<String> list) {
+        final String value = list.get(1);
+        list.add("Four");
+        System.out.println(value);
+    }
+
+}
+```
+
+**Output**
+
+```
+Two
+main list: [One, Two, Three, Four]
+```
+
+The `main` thread **stack** will store reference variable `list` and the **copy** of the same list is sent to `print()`
+method.
+
+`ArrayList` object is created in **heap** and the indices inside it are pointing to the `String` objects which are
+also created on **heap** (String pool).
+
+Please note that any updates done on the copy of the same list will be reflected on the original list as the object
+itself is updated in the heap.
+
+### Interview Problem 4 (Merrill Lunch): Predict the output of the program with explanation
+
+Suppose we have a `BlackBox` class:
+
+```java
+public class BlackBox {
+    private String secret = "A";
+
+    public String getSecret() {
+        return secret;
+    }
+
+    public void setSecret(final String secret) {
+        this.secret = secret;
+    }
+}
+```
+
+And, this is the main class:
+
+```java
+public class MemoryTest1 {
+
+    public static void main(final String[] args) {
+        final MemoryTest1 main = new MemoryTest1();
+        main.start();
+    }
+
+    public void start() {
+        final String last = "Z";
+        final BlackBox blackBox = new BlackBox();
+        blackBox.setSecret("C");
+        another(blackBox, last);
+        System.out.print(blackBox.getSecret());
+    }
+
+    public void another(BlackBox initialSecret, final String newSecret) {
+        newSecret.toLowerCase();
+        initialSecret.setSecret("B");
+        final BlackBox initial2 = new BlackBox();
+        initialSecret = initial2;
+        System.out.print(initialSecret.getSecret());
+        System.out.print(newSecret);
+    }
+}
+```
+
+Predict the output of the above program and explain the stack and heap allocations.
+
+**Output**
+
+```
+AZB
+```
+
+### Escaping References
 
