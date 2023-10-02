@@ -15,12 +15,12 @@ public class MemoryTest1 {
         System.out.print(blackBox.getSecret());
     }
 
-    public void another(BlackBox initialSecret, final String newSecret) {
+    public void another(BlackBox blackbox1, final String newSecret) {
         newSecret.toLowerCase();
-        initialSecret.setSecret("B");
-        final BlackBox initial2 = new BlackBox();
-        initialSecret = initial2;
-        System.out.print(initialSecret.getSecret());
+        blackbox1.setSecret("B");
+        final BlackBox blackbox2 = new BlackBox();
+        blackbox1 = blackbox2;
+        System.out.print(blackbox1.getSecret());
         System.out.print(newSecret);
     }
 }

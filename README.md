@@ -18,9 +18,9 @@ Tools used:
     - [Interview Problem 2 (Barclays) - What is JVM warmup and how does it improve JVM performance?](https://github.com/backstreetbrogrammer/39_JavaPerformance#interview-problem-2-barclays---what-is-jvm-warmup-and-how-does-it-improve-jvm-performance)
     - [Interview Problem 3 (Point72 Hedge Fund) - Print Code Compilation](https://github.com/backstreetbrogrammer/39_JavaPerformance#interview-problem-3-point72-hedge-fund---print-code-compilation)
     - [Compilers C1 and C2](https://github.com/backstreetbrogrammer/39_JavaPerformance#compilers-c1-and-c2)
-3. [Java Memory Model](https://github.com/backstreetbrogrammer/39_JavaPerformance#chapter-02-just-in-time-compilation)
-    - [Interview Problem 4 (Merrill Lunch): Predict the output of the program with explanation](https://github.com/backstreetbrogrammer/39_JavaPerformance#chapter-02-just-in-time-compilation)
-    - [Escaping References](https://github.com/backstreetbrogrammer/39_JavaPerformance#chapter-02-just-in-time-compilation)
+3. [Java Memory Model](https://github.com/backstreetbrogrammer/39_JavaPerformance#chapter-03-java-memory-model)
+    - [Interview Problem 4 (Merrill Lunch): Predict the output of the program with explanation](https://github.com/backstreetbrogrammer/39_JavaPerformance#interview-problem-4-merrill-lunch-predict-the-output-of-the-program-with-explanation)
+    - [Escaping References](https://github.com/backstreetbrogrammer/39_JavaPerformance#escaping-references)
     - JVM memory tuning
 4. Garbage Collection
     - Monitoring and Tuning Heap
@@ -662,12 +662,12 @@ public class MemoryTest1 {
         System.out.print(blackBox.getSecret());
     }
 
-    public void another(BlackBox initialSecret, final String newSecret) {
+    public void another(BlackBox blackbox1, final String newSecret) {
         newSecret.toLowerCase();
-        initialSecret.setSecret("B");
-        final BlackBox initial2 = new BlackBox();
-        initialSecret = initial2;
-        System.out.print(initialSecret.getSecret());
+        blackbox1.setSecret("B");
+        final BlackBox blackbox2 = new BlackBox();
+        blackbox1 = blackbox2;
+        System.out.print(blackbox1.getSecret());
         System.out.print(newSecret);
     }
 }
@@ -682,4 +682,18 @@ AZB
 ```
 
 ### Escaping References
+
+A Class in java can have both **primitive** and **non-primitive** type members. These instance variables are declared as
+`private`, and we can only access or modify them through the defined behavior methods (`getters/setters`) of the class.
+
+Any **primitive** values that are accessed/retrieved using a `get()` method are passed to the caller as
+**pass by value**. This is an ideal case to ensure encapsulation.
+
+However, in case of **non-primitive** field/member of a class, **heap** reference of this member is
+**passed by value** to the caller.
+
+Now, as the caller has the reference of this member, they could **modify** the actual object using the reference that
+received, although the non-primitive field is declared `private` inside the class.
+
+This is called **Escaping References** in Java.
 
