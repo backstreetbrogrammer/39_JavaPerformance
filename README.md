@@ -21,7 +21,7 @@ Tools used:
 3. [Java Memory Model](https://github.com/backstreetbrogrammer/39_JavaPerformance#chapter-03-java-memory-model)
     - [Interview Problem 4 (Merrill Lunch): Predict the output of the program with explanation](https://github.com/backstreetbrogrammer/39_JavaPerformance#interview-problem-4-merrill-lunch-predict-the-output-of-the-program-with-explanation)
     - [Escaping References](https://github.com/backstreetbrogrammer/39_JavaPerformance#escaping-references)
-    - JVM memory optimizations and tuning
+    - [JVM memory optimizations and tuning](https://github.com/backstreetbrogrammer/39_JavaPerformance#jvm-memory-optimizations-and-tuning)
 4. Garbage Collection
     - Monitoring and Tuning Heap
     - Garbage Collector Tuning
