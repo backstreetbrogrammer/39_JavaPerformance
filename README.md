@@ -21,7 +21,7 @@ Tools used:
 3. [Java Memory Model](https://github.com/backstreetbrogrammer/39_JavaPerformance#chapter-03-java-memory-model)
     - [Interview Problem 4 (Merrill Lunch): Predict the output of the program with explanation](https://github.com/backstreetbrogrammer/39_JavaPerformance#interview-problem-4-merrill-lunch-predict-the-output-of-the-program-with-explanation)
     - [Escaping References](https://github.com/backstreetbrogrammer/39_JavaPerformance#escaping-references)
-    - JVM memory tuning
+    - JVM memory optimizations and tuning
 4. Garbage Collection
     - Monitoring and Tuning Heap
     - Garbage Collector Tuning
@@ -696,4 +696,230 @@ Now, as the caller has the reference of this member, they could **modify** the a
 received, although the non-primitive field is declared `private` inside the class.
 
 This is called **Escaping References** in Java.
+
+Let's explain this with an example.
+
+We have a `Student` class:
+
+```java
+import java.util.Objects;
+
+public class Student {
+
+    private final String name;
+    private final int age;
+
+    public Student(final String name, final int age) {
+        this.name = name;
+        this.age = age;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public int getAge() {
+        return age;
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        final Student student = (Student) o;
+        return age == student.age && Objects.equals(name, student.name);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name, age);
+    }
+
+    @Override
+    public String toString() {
+        return "Student{" +
+                "name='" + name + '\'' +
+                ", age=" + age +
+                '}';
+    }
+}
+```
+
+And we have a `StudentRecords` class:
+
+```java
+import java.util.HashMap;
+import java.util.Map;
+
+public class StudentRecords {
+
+    private final Map<String, Student> records;
+
+    public StudentRecords() {
+        this.records = new HashMap<>();
+    }
+
+    public void addStudent(final Student student) {
+        this.records.put(student.getName(), student);
+    }
+
+    public Map<String, Student> getStudents() {
+        return this.records;
+    }
+
+}
+```
+
+Now, we want to use it in the main class:
+
+```java
+public class EscapingReferenceMain {
+
+    public static void main(final String[] args) {
+        final StudentRecords studentRecords = new StudentRecords();
+
+        studentRecords.addStudent(new Student("John", 18));
+        studentRecords.addStudent(new Student("Mary", 17));
+
+        for (final Student student : studentRecords.getStudents().values()) {
+            System.out.println(student);
+        }
+    }
+
+}
+```
+
+**Output**
+
+```
+Student{name='John', age=18}
+Student{name='Mary', age=17}
+```
+
+There is an escaping reference problem in the above code - in `getStudents()` method
+
+```
+    public Map<String, Student> getStudents() {
+        return this.records;
+    }
+```
+
+What if in the main class, the whole records get cleared by this code:
+
+```
+        final Map<String, Student> students = studentRecords.getStudents();
+        students.clear();
+```
+
+Although our `private final Map<String, Student> records` is marked both `private` and `final`, it can still be
+**mutated** by the client code.
+
+**_Solution Attempt 1 - Using an iterator_**
+
+Let's change the `StudentsRecord` class to implement `Iterable` and remove `getStudents()` method:
+
+```java
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+
+public class StudentRecordsIterable implements Iterable<Student> {
+
+    private final Map<String, Student> records;
+
+    public StudentRecordsIterable() {
+        this.records = new HashMap<>();
+    }
+
+    public void addStudent(final Student student) {
+        this.records.put(student.getName(), student);
+    }
+
+    @Override
+    public Iterator<Student> iterator() {
+        return records.values().iterator();
+    }
+}
+```
+
+Now, we can change the main class as:
+
+```
+    public static void main(final String[] args) {
+        final StudentRecordsIterable studentRecords = new StudentRecordsIterable();
+
+        studentRecords.addStudent(new Student("John", 18));
+        studentRecords.addStudent(new Student("Mary", 17));
+
+        for (final Student student : studentRecords) {
+            System.out.println(student);
+        }
+    }
+```
+
+Output will be same.
+
+However, there is still a problem here as `Iterator` has got `remove()` method to mutate the original map.
+
+```
+    public static void main(final String[] args) {
+        final StudentRecordsIterable studentRecords = new StudentRecordsIterable();
+
+        studentRecords.addStudent(new Student("John", 18));
+        studentRecords.addStudent(new Student("Mary", 17));
+
+        final Iterator<Student> studentIterator = studentRecords.iterator();
+        studentIterator.next();
+        studentIterator.remove();
+
+        for (final Student student : studentRecords) {
+            System.out.println(student);
+        }
+    }
+```
+
+**Output**
+
+```
+Student{name='Mary', age=17}
+```
+
+**_Solution Attempt 2 - duplicating collections_**
+
+Let's totally remove the escaping reference and instead of returning the original collection - return a copy of the
+original collection.
+
+```
+    public Map<String, Student> getStudents() {
+        return new HashMap<>(this.records);
+    }
+```
+
+The client can mutate only the copy of the records map but the original records map is intact in the `StudentRecords`
+class.
+
+This fixes our escaping reference problem - however there is still a caveat => this is not performant enough.
+
+If the map is very huge - every `getStudent()` call will create a new copy of the map and occupy all the heap memory.
+
+**_Solution Attempt 3 - using immutable collections_**
+
+If we return the **immutable** map to the client, then it can not be mutated at all even by the client on the copy of
+the original records map.
+
+```
+    public Map<String, Student> getStudents() {
+        return Map.copyOf(this.records);
+    }
+```
+
+`Map.copyOf()` returns an `unmodifiable Map` containing the entries of the given `Map`. The given `Map`
+must not be null, and it must not contain any null keys or values. If the given `Map` is subsequently modified, the
+returned `Map` will not reflect such modifications.
+
+An important aspect of these methods is that they are **idempotent**. Copying a previously copied collection does
+**NOT** make another copy.
+
+### JVM memory optimizations and tuning
+
 
