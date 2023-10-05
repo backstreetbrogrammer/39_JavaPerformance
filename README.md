@@ -895,16 +895,16 @@ original collection.
     }
 ```
 
-The client can mutate only the copy of the records map but the original records map is intact in the `StudentRecords`
-class.
+The client can mutate only the copy of the `records` map, but the original `records` map is intact in
+the `StudentRecords` class.
 
-This fixes our escaping reference problem - however there is still a caveat => this is not performant enough.
+This fixes our escaping reference problem; however, there is still a caveat => this is not performant enough.
 
 If the map is very huge - every `getStudent()` call will create a new copy of the map and occupy all the heap memory.
 
 **_Solution Attempt 3 - using immutable collections_**
 
-If we return the **immutable** map to the client, then it can not be mutated at all even by the client on the copy of
+If we return the **immutable** map to the client, then it cannot be mutated at all even by the client on the copy of
 the original records map.
 
 ```
@@ -922,4 +922,113 @@ An important aspect of these methods is that they are **idempotent**. Copying a 
 
 ### JVM memory optimizations and tuning
 
+In every programming language, **memory** is a vital resource and is also scarce in nature. Hence, it’s essential that
+the memory is managed thoroughly without any leaks.
+
+JVM defines various run-time data areas which are used during execution of a program. Some of the areas are created by
+the **JVM** whereas some are created by the **threads** that are used in a program.
+
+However, the data areas of thread are created during instantiation and destroyed when the thread exits, and similarly,
+the memory area created by JVM is destroyed only when the JVM exits.
+
+JVM Memory Structure is divided into multiple memory areas like heap area, stack area, method area, PC Registers etc.
+
+**_Class Loaders_**
+
+Class loaders are part of the **Java Runtime Environment**. When the JVM requests a class, the class loader tries to
+locate the class and load the class definition into the runtime using the **fully qualified class name**.
+
+The `java.lang.ClassLoader.loadClass()` method is responsible for loading the class definition into runtime. It tries to
+load the class based on a fully qualified name.
+
+If the class isn’t already loaded, it delegates the request to the parent class loader. This process happens
+**recursively**.
+
+Eventually, if the parent class loader does not find the class, then the child class will call the
+`java.net.URLClassLoader.findClass()` method to look for classes in the file system itself.
+
+If the last child class loader isn’t able to load the class either, it throws `java.lang.NoClassDefFoundError` or
+`java.lang.ClassNotFoundException`.
+
+**_PermGen vs Metaspace_**
+
+**PermGen (Permanent Generation)** is a special heap space separated from the main memory heap.
+
+The JVM keeps track of loaded class **metadata** in the PermGen.
+
+Additionally, the JVM stores all the **static** content in this memory section.
+
+This includes all the static methods, static primitive variables, and references to the static objects.
+
+Furthermore, it contains data about bytecode, names, and JIT information.
+
+Before `Java 7`, the `String Pool` was also part of this memory.
+
+The default maximum memory size for `32-bit JVM` is `64 MB` and `82 MB` for the `64-bit` version.
+
+However, we can change the default size with the JVM options:
+
+```
+-XX:PermSize=[size] is the initial or minimum size of the PermGen space
+-XX:MaxPermSize=[size] is the maximum size
+```
+
+The biggest disadvantage of **PermGen** is that it contains a limited size which leads to an `OutOfMemoryError`.
+
+Simply put, the class loaders were not garbage collected properly and, as a result, generated a memory leak.
+
+Therefore, we receive a memory space error; this happens mostly in the development environment while creating new class
+loaders.
+
+JVM had to change the size of this memory by frequently performing **Garbage Collection** which is a costly operation.
+
+Although we can manually change the size of the **PermGen** memory, however, the **PermGen** space cannot be made to
+**auto increase**. So, it is difficult to tune it. And also, the garbage collector is not efficient enough to clean the
+memory.
+
+Due to the above problems, **PermGen** has been completely **removed** in `Java 8`.
+
+In the place of **PermGen**, a new feature called **Meta Space** has been introduced.
+
+![MetaSpace](MetaSpace.PNG)
+
+The most significant difference is how **MetaSpace** handles memory allocation.
+
+Specifically, this native memory region grows automatically by default.
+
+The garbage collection is automatically triggered when the class metadata usage reaches its maximum metaspace size.
+
+We also have new flags to tune the memory:
+
+- `MetaspaceSize` and `MaxMetaspaceSize` – we can set the **Metaspace** upper bounds.
+- `MinMetaspaceFreeRatio` – is the minimum percentage of class metadata capacity free after garbage collection
+- `MaxMetaspaceFreeRatio` – is the maximum percentage of class metadata capacity free after a garbage collection to
+  avoid a reduction in the amount of space
+
+Additionally, the garbage collection process also gains some benefits from this change. The garbage collector now
+automatically triggers the cleaning of the dead classes once the class metadata usage reaches its maximum metaspace
+size.
+
+Therefore, with this improvement, JVM reduces the chance to get the `OutOfMemoryError`.
+
+### Interview Problem 5 (Barclays): What is String Pool and how it affects Java Performance?
+
+Java **String Pool** is the special memory region where `Strings` are stored by the JVM.
+
+As `Strings` are **immutable**, the JVM can optimize the amount of memory allocated for them by storing only one
+copy of each literal `String` in the pool. This process is called **interning**.
+
+When we create a `String` variable and assign a value to it, the JVM searches the pool for a `String` of equal value.
+
+- **If found**, the Java compiler will simply return a reference to its memory address, without allocating additional
+  memory.
+- **If not found**, it’ll be added to the pool (**interned**) and its reference will be returned.
+
+```
+final String str1 = "Guidemy";
+final String str2 = "Guidemy";
+        
+assertTrue(str1.equals(str2));
+assertTrue(str1 == str2);
+```
 
