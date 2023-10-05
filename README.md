@@ -22,6 +22,7 @@ Tools used:
     - [Interview Problem 4 (Merrill Lunch): Predict the output of the program with explanation](https://github.com/backstreetbrogrammer/39_JavaPerformance#interview-problem-4-merrill-lunch-predict-the-output-of-the-program-with-explanation)
     - [Escaping References](https://github.com/backstreetbrogrammer/39_JavaPerformance#escaping-references)
     - [JVM memory optimizations and tuning](https://github.com/backstreetbrogrammer/39_JavaPerformance#jvm-memory-optimizations-and-tuning)
+    - [Interview Problem 5 (Barclays): What is String Pool and how it affects Java Performance?](https://github.com/backstreetbrogrammer/39_JavaPerformance#interview-problem-5-barclays-what-is-string-pool-and-how-it-affects-java-performance)
 4. Garbage Collection
     - Monitoring and Tuning Heap
     - Garbage Collector Tuning
@@ -935,6 +936,13 @@ JVM Memory Structure is divided into multiple memory areas like heap area, stack
 
 **_Class Loaders_**
 
+Class loaders are responsible for loading Java classes dynamically to the JVM (Java Virtual Machine) during runtime.
+
+Therefore, the JVM does not need to know about the underlying files or file systems in order to run Java programs.
+
+Furthermore, these Java classes aren't loaded into memory all at once, but rather when they're required by an
+application. This is where class loaders come into the picture. They're responsible for loading classes into memory.
+
 Class loaders are part of the **Java Runtime Environment**. When the JVM requests a class, the class loader tries to
 locate the class and load the class definition into the runtime using the **fully qualified class name**.
 
@@ -988,7 +996,7 @@ memory.
 
 Due to the above problems, **PermGen** has been completely **removed** in `Java 8`.
 
-In the place of **PermGen**, a new feature called **Meta Space** has been introduced.
+In place of **PermGen**, a new feature called **Meta Space** has been introduced.
 
 ![MetaSpace](MetaSpace.PNG)
 
@@ -1022,7 +1030,7 @@ When we create a `String` variable and assign a value to it, the JVM searches th
 
 - **If found**, the Java compiler will simply return a reference to its memory address, without allocating additional
   memory.
-- **If not found**, it’ll be added to the pool (**interned**) and its reference will be returned.
+- **If not found**, it'll be added to the pool (**interned**) and its reference will be returned.
 
 ```
 final String str1 = "Guidemy";
