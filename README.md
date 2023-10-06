@@ -1,6 +1,6 @@
 # Java Performance
 
-> This is a Java course to understand performance, garbage collection and JVM tuning techniques.
+> This is a Java course to understand performance, compilation and JVM tuning techniques.
 
 Tools used:
 
@@ -23,12 +23,7 @@ Tools used:
     - [Escaping References](https://github.com/backstreetbrogrammer/39_JavaPerformance#escaping-references)
     - [JVM memory optimizations and tuning](https://github.com/backstreetbrogrammer/39_JavaPerformance#jvm-memory-optimizations-and-tuning)
     - [Interview Problem 5 (Barclays): What is String Pool and how it affects Java Performance?](https://github.com/backstreetbrogrammer/39_JavaPerformance#interview-problem-5-barclays-what-is-string-pool-and-how-it-affects-java-performance)
-4. Garbage Collection
-    - Monitoring and Tuning Heap
-    - Garbage Collector Tuning
-5. Performance Benchmarking
-    - Using a profiler
-    - Using JMH
+4. [Garbage Collection and Performance Benchmarking](https://github.com/backstreetbrogrammer/41_GarbageCollectionAndBenchmarking)
 
 ---
 
@@ -926,7 +921,7 @@ An important aspect of these methods is that they are **idempotent**. Copying a 
 In every programming language, **memory** is a vital resource and is also scarce in nature. Hence, it’s essential that
 the memory is managed thoroughly without any leaks.
 
-JVM defines various run-time data areas which are used during execution of a program. Some of the areas are created by
+JVM defines various run-time data areas which are used during execution of a program. Few of the areas are created by
 the **JVM** whereas some are created by the **threads** that are used in a program.
 
 However, the data areas of thread are created during instantiation and destroyed when the thread exits, and similarly,
@@ -1033,10 +1028,150 @@ When we create a `String` variable and assign a value to it, the JVM searches th
 - **If not found**, it'll be added to the pool (**interned**) and its reference will be returned.
 
 ```
-final String str1 = "Guidemy";
-final String str2 = "Guidemy";
-        
-assertTrue(str1.equals(str2));
-assertTrue(str1 == str2);
+        final String str1 = "Guidemy";
+        final String str2 = "Guidemy";
+
+        assertTrue(str1.equals(str2));
+        assertTrue(str1 == str2);
 ```
+
+When we create a `String` via the `new` operator, the Java compiler will create a new object and store it in the heap
+space reserved for the JVM.
+
+Every `String` created like this will point to a different memory region with its own address.
+
+```
+        final String str1 = "Guidemy";
+        final String str2 = new String("Guidemy");
+
+        assertTrue(str1.equals(str2));
+        assertFalse(str1 == str2);
+```
+
+In general, we should use the String literal notation when possible. It is easier to read and it gives the compiler a
+chance to optimize our code.
+
+We can manually **intern** a String in the Java **String Pool** by calling the `intern()` method on the object we want
+to intern.
+
+Manually interning the String will store its reference in the pool, and the JVM will return this reference when needed.
+
+```
+        final String str1 = "Guidemy";
+        final String str2 = new String("Guidemy").intern();
+
+        assertTrue(str1.equals(str2));
+        assertTrue(str1 == str2);
+```
+
+**Before Java 7**, the JVM placed the Java String Pool in the `PermGen` space, which has a fixed size — it can’t be
+expanded at runtime and is **not** eligible for garbage collection.
+
+The risk of interning Strings in the `PermGen` (instead of the `Heap`) is that we can get an `OutOfMemory` error from
+the JVM if we intern too many Strings.
+
+**From Java 7 onwards**, the Java String Pool is stored in the `Heap` space, which is garbage collected by the JVM. The
+advantage of this approach is the reduced risk of `OutOfMemory` error because unreferenced Strings will be removed from
+the pool, thereby releasing memory.
+
+Internally, String Pool is implemented using a `HashMap`. All the String to be interned are put in the appropriate
+bucket of the map using their hashcode.
+
+We can have several hash collisions - meaning that many strings can be placed in the same bucket.
+
+We can view the bucket size using below JVM flags:
+
+```
+-XX:+PrintFlagsFinal
+```
+
+This will give a very detailed output.
+
+Better to use the below JVM flag to just get `SymbolTable` statistics and `StringTable` statistics:
+
+```
+-XX:+PrintStringTableStatistics
+```
+
+Sample output for running: `java -XX:+PrintStringTableStatistics PrimeNumbersGenerator 10000`
+
+```
+SymbolTable statistics:
+Number of buckets       :     20011 =    160088 bytes, each 8
+Number of entries       :     30929 =    742296 bytes, each 24
+Number of literals      :     30929 =   1199968 bytes, avg  38.798
+Total footprint         :           =   2102352 bytes
+Average bucket size     :     1.546
+Variance of bucket size :     1.542
+Std. dev. of bucket size:     1.242
+Maximum bucket size     :         9
+StringTable statistics:
+Number of buckets       :     65536 =    524288 bytes, each 8
+Number of entries       :      4658 =     74528 bytes, each 16
+Number of literals      :      4658 =    302096 bytes, avg  64.855
+Total footprsize_t         :           =    900912 bytes
+Average bucket size     :     0.071
+Variance of bucket size :     0.072
+Std. dev. of bucket size:     0.267
+Maximum bucket size     :         3
+```
+
+The default pool size from `Java 7` until `Java 11` was `60013` and now it is increased to `65536`.
+
+If we want to increase the pool size in terms of **buckets**, we can use the `StringTableSize` JVM option:
+
+```
+-XX:StringTableSize=<prime number>
+
+e.g. 
+-XX:StringTableSize=120121
+```
+
+Sample output for running: `java -XX:StringTableSize=120121 -XX:+PrintStringTableStatistics PrimeNumbersGenerator 10000`
+
+```
+SymbolTable statistics:
+Number of buckets       :     20011 =    160088 bytes, each 8
+Number of entries       :     30929 =    742296 bytes, each 24
+Number of literals      :     30929 =   1199968 bytes, avg  38.798
+Total footprint         :           =   2102352 bytes
+Average bucket size     :     1.546
+Variance of bucket size :     1.542
+Std. dev. of bucket size:     1.242
+Maximum bucket size     :         9
+StringTable statistics:
+Number of buckets       :    131072 =   1048576 bytes, each 8
+Number of entries       :      4656 =     74496 bytes, each 16
+Number of literals      :      4656 =    301984 bytes, avg  64.859
+Total footprsize_t         :           =   1425056 bytes
+Average bucket size     :     0.036
+Variance of bucket size :     0.035
+Std. dev. of bucket size:     0.188
+Maximum bucket size     :         3
+```
+
+Please note that increasing the pool size will consume more memory but has the advantage of reducing the time
+required to insert the Strings into the table (as fewer hash collisions).
+
+**_Compact Strings_**
+
+**Until Java 8**, Strings were internally represented as an array of characters – `char[]`, encoded in `UTF-16`, so that
+every character uses **two bytes** of memory.
+
+```
+private final char[] value;
+```
+
+**From Java 9**, a new representation is provided, called **Compact Strings**. This new format will choose the
+appropriate encoding between `char[]` and `byte[]` depending on the stored content.
+
+```
+private final byte[] value;
+
+/*can be LATIN1 = 0 or UTF16 = 1 */
+private final byte coder;
+```
+
+Since the new `String` representation will use the `UTF-16` encoding **only when necessary**, the amount of heap memory
+will be significantly lower, which in turn causes less Garbage Collector overhead on the JVM.
 
